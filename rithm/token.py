@@ -28,6 +28,7 @@ class TokenType(Enum):
     SLASH = "/"
     PLUS = "+"
     MINUS = "-"
+    CARET = "^"
     NEWLINE = "\n"
 
     # Literals

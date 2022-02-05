@@ -91,6 +91,8 @@ class Scanner:
                 self.add_token(TT.SLASH)
             case "+":
                 self.add_token(TT.PLUS)
+            case "^":
+                self.add_token(TT.CARET)
             case "-":
                 if self.match(">"):
                     self.advance_and_get_char()

@@ -31,7 +31,46 @@ def test_basic_scan():
         TT.FLOAT,
     ]
 
+    assert (
+        token_types(
+            rtm().scan(
+                """\tfoo = 2
+            power = 7
+            x = foo^(power*foo)"""
+            ),
+            ignore=[TT.SPACE],
+        )
+        == [
+            TT.TAB,
+            TT.IDENTIFIER,
+            TT.EQUAL,
+            TT.INTEGER,
+            TT.NEWLINE,
+        ]
+        + [
+            TT.IDENTIFIER,
+            TT.EQUAL,
+            TT.INTEGER,
+            TT.NEWLINE,
+        ]
+        + [
+            TT.IDENTIFIER,
+            TT.EQUAL,
+            TT.IDENTIFIER,
+            TT.CARET,
+            TT.PAREN_OPEN,
+            TT.IDENTIFIER,
+            TT.STAR,
+            TT.IDENTIFIER,
+            TT.PAREN_CLOSE,
+            TT.EOF,
+        ]
+    )
+
+
+def test_scanner_errors():
     with pytest.raises(ScanningException):
+        # Raises exception because there's an open quote but no close quote
         rtm().scan('"foo')
 
 
@@ -75,7 +114,7 @@ def test_scan_arrows():
         TT.MINUS,
         TT.IDENTIFIER,
         TT.ARROW_RIGHT,
-        TT.IDENTIFIER
+        TT.IDENTIFIER,
     ]
 
     dbl_arrow_w_name_wo_spaces = rtm().scan("x=step=>foo")
