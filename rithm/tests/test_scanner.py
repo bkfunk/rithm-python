@@ -47,3 +47,42 @@ def test_scan_arrows():
 
     arrow_without_spaces = rtm().scan("x->foo")
     assert token_types(arrow_without_spaces) == token_types(arrow_with_spaces)
+
+    double_arrow_w_spaces = rtm().scan("x => foo")
+    assert token_types(double_arrow_w_spaces, ignore=[TT.EOF]) == [
+        TT.IDENTIFIER,
+        TT.SPACE,
+        TT.DBL_ARROW_RIGHT,
+        TT.SPACE,
+        TT.IDENTIFIER,
+    ]
+    double_arrow_wo_spaces = rtm().scan("x=>foo")
+    assert token_types(double_arrow_w_spaces) == token_types(double_arrow_wo_spaces)
+
+    arrow_with_name = rtm().scan("x -step-> foo")
+    assert token_types(arrow_with_name, ignore=[TT.EOF]) == [
+        TT.IDENTIFIER,
+        TT.SPACE,
+        TT.MINUS,
+        TT.IDENTIFIER,
+        TT.ARROW_RIGHT,
+        TT.SPACE,
+        TT.IDENTIFIER,
+    ]
+    subtraction_then_arrow = rtm().scan("x - step -> foo")
+    assert token_types(subtraction_then_arrow) == [
+        TT.IDENTIFIER,
+        TT.MINUS,
+        TT.IDENTIFIER,
+        TT.ARROW_RIGHT,
+        TT.IDENTIFIER
+    ]
+
+    dbl_arrow_w_name_wo_spaces = rtm().scan("x=step=>foo")
+    assert token_types(dbl_arrow_w_name_wo_spaces) == [
+        TT.IDENTIFIER,
+        TT.EQUAL,
+        TT.IDENTIFIER,
+        TT.DBL_ARROW_RIGHT,
+        TT.IDENTIFIER,
+    ]
