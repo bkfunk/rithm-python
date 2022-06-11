@@ -3,7 +3,7 @@ from functools import wraps
 from typing import Callable, Container, List, Sequence, Tuple, Optional, Union
 from rithm.expr import Assignment, Binary, Expr, Grouping, Identifier, Literal, Unary
 from rithm.logging import get_logger
-from rithm.stmt import ExpressionStmt, IfStmt, Stmt
+from rithm.stmt import BlockStmt, ExpressionStmt, IfStmt, Stmt
 import logging
 from rithm.logging import get_logger
 
@@ -116,7 +116,13 @@ class Parser:
         return False
 
     def synchronize(self):
-        pass
+        """Try to get to the next valid state"""
+        parse_logger.debug(f"Synchronizing: {self.current_token}")
+        while not self.is_at_end:
+            if self.prev_token.token_type is TT.NEWLINE:
+                parse_logger.debug(f"Synchronized at {self.current_token}")
+                return
+            self.consume_and_advance()
 
     def parse(self) -> List[Stmt]:
         parse_logger.debug(f"Parsing tokens: {pretty_repr(self.tokens)}")
@@ -124,53 +130,102 @@ class Parser:
         stmts = []
         while not self.is_at_end:
             try:
-                stmts.append(self.parse_declaration())
+                parsed = self.parse_declaration()
+                if parsed is not None:
+                    stmts.append(parsed)
+                # stmts.append(self.parse_declaration())
             except ParseError:
                 self.synchronize()
         return stmts
 
-    def parse_declaration(self) -> Stmt:
+    @logged
+    def parse_declaration(self) -> Optional[Stmt]:
         parsed = self.parse_statement()
         return parsed
 
     @logged
-    def parse_statement(self) -> Stmt:
+    def parse_statement(self) -> Optional[Stmt]:
         self.depth = 0
 
+        if self.match(TT.DO):
+            return self.parse_block_statement()
         if self.match(TT.IF):
             return self.parse_if_statement()
 
         # if self.match(TT.IDENTIFIER):
 
+        # Consume the next token and try to parse it as an expression
         parsed = self.parse_expression()
 
-        # if self.match(TT.EQUAL):
-        #     return self.parse_assigment_stmt()
-        #     self.consume_and_advance()
-        #     return AssignmentStmt(expr.token.lexeme, None)
+        if parsed is None:
+            # If parsed is None, it means the token should be ignored.
+            # If result should be ignored, then ignore it
+            return
 
+        # If we've parsed something, and then it's followed by either a newline or end-of-file,
+        # then consume that terminator and return what we've parsed
         if self.match(TT.NEWLINE, TT.EOF):
             self.consume_and_advance()
             if isinstance(parsed, Expr):
                 return ExpressionStmt(parsed)
             return parsed
+
+        parse_logger.error(
+            "Statement ended with no newline:"
+            f" {parsed}\n{self.current_token}\n{self.next_token}"
+        )
         raise ParseError("Statements must end in newline")
 
     @logged
+    def parse_block_statement(self) -> BlockStmt:
+        self.consume_and_advance(
+            ignore=[*WHITESPACE, TT.NEWLINE]
+        )  # Consume the DO token and spacing
+        stmts = []
+
+        while not self.match(TT.END):
+            if self.match(TT.EOF):
+                raise ParseError("No end to match opening do")
+            next_stmt = self.parse_statement()
+            if next_stmt is not None:
+                stmts.append(next_stmt)
+
+        end = self.consume_and_advance()  # Consume the END token
+        parse_logger.debug("Got end:", end)
+
+        return BlockStmt(stmts=stmts)
+
+    # @logged
     def parse_if_statement(self) -> IfStmt:
         # TODO: What should delimit the if statement?
-        return IfStmt()
+        self.consume_and_advance()  # Consume the IF token
+        condition = self.parse_expression()
+        then_branch = self.parse_statement()
+        if self.match(TT.ELSE):
+            self.consume_and_advance()  # Consume the ELSE token
+            else_branch = self.parse_statement()
+        else:
+            else_branch = None
+
+        # TODO: what happens if there's a blank line as the condition and/or then branch?
+        if condition is None or then_branch is None:
+            # TODO: Can then branch be empty?
+            self.raise_error("If statement must have condition and then block")
+
+        return IfStmt(
+            condition=condition, then_branch=then_branch, else_branch=else_branch
+        )
 
     # @logged
     # def parse_assigment_or_higher(self) -> Union[Expr, Stmt]:
 
     @logged
-    def parse_expression(self) -> Expr:
+    def parse_expression(self) -> Optional[Expr]:
         # return self.parse_equality_or_higher()
         return self.parse_assignment_or_higher()
 
-    @logged
-    def parse_assignment_or_higher(self) -> Expr:
+    # @logged
+    def parse_assignment_or_higher(self) -> Optional[Expr]:
         expr = self.parse_equality_or_higher()
 
         if self.match(TT.EQUAL):
@@ -186,7 +241,7 @@ class Parser:
         higher_method: Callable,
         matching_tokens: Sequence[TT],
         ignore: Optional[Container[TT]] = WHITESPACE,
-    ):
+    ) -> Optional[Expr]:
         next_expr = higher_method()
 
         while self.match(*matching_tokens, ignore=ignore):
@@ -198,15 +253,15 @@ class Parser:
 
         return next_expr
 
-    @logged
-    def parse_equality_or_higher(self) -> Expr:
+    # @logged
+    def parse_equality_or_higher(self) -> Optional[Expr]:
         return self._parse_binary(
             higher_method=self.parse_comparison_or_higher,
             matching_tokens=(TT.EQUAL_EQUAL,),
         )
 
-    @logged
-    def parse_comparison_or_higher(self) -> Expr:
+    # @logged
+    def parse_comparison_or_higher(self) -> Optional[Expr]:
         return self._parse_binary(
             higher_method=self.parse_add_sub_or_higher,
             matching_tokens=(
@@ -225,22 +280,22 @@ class Parser:
 
         # return next_expr
 
-    @logged
-    def parse_add_sub_or_higher(self) -> Expr:
+    # @logged
+    def parse_add_sub_or_higher(self) -> Optional[Expr]:
         return self._parse_binary(
             higher_method=self.parse_mult_div_or_higher,
             matching_tokens=(TT.PLUS, TT.MINUS),
         )
 
-    @logged
-    def parse_mult_div_or_higher(self) -> Expr:
+    # @logged
+    def parse_mult_div_or_higher(self) -> Optional[Expr]:
         return self._parse_binary(
             higher_method=self.parse_unary_or_higher,
             matching_tokens=(TT.STAR, TT.SLASH),
         )
 
-    @logged
-    def parse_unary_or_higher(self) -> Expr:
+    # @logged
+    def parse_unary_or_higher(self) -> Optional[Expr]:
         if self.match(TT.BANG, TT.MINUS):
             operator = self.consume_and_advance()
             expr = self.parse_unary_or_higher()
@@ -249,11 +304,21 @@ class Parser:
         # If not a unary, than it must be a literal
         return self.parse_literal()
 
-    @logged
-    def parse_literal(self) -> Expr:
+    # @logged
+    def parse_call_or_higher(self) -> Optional[Expr]:
+        expr = self.parse_primary_or_higher()
+        # TODO: Parse arguments
+
+    # @logged
+    def parse_primary_or_higher(self) -> Optional[Expr]:
+        expr = self.parse_literal()
+        return expr
+
+    # @logged
+    def parse_literal(self) -> Optional[Expr]:
         literal_token = self.consume_and_advance()
         match literal_token.token_type:
-            case TT.NEWLINE:
+            case TT.NEWLINE | TT.EOF:
                 # Ignore empty lines
                 return None
             case TT.FALSE:
@@ -281,7 +346,8 @@ class Parser:
                     )
 
                 self.raise_error(
-                    f"Opening delimiter {literal_token.token_type.value} has no closing delimiter"
+                    f"Opening delimiter {literal_token.token_type.value} has no closing"
+                    " delimiter"
                 )
             case TT.IDENTIFIER:
                 return self.log_and_parse(Identifier(literal_token))

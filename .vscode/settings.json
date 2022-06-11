@@ -1,4 +1,5 @@
 {
+    "editor.tabCompletion": "on",
     "python.testing.pytestPath": "pytest",
     "python.testing.pytestArgs": [
         "-v",
@@ -10,5 +11,8 @@
         "tab.activeBorder": "#0be98c",
         "tab.inactiveBackground": "#63636328",
         "tab.activeBackground": "#85858581"
-    }
+    },
+    // "editor.tokenColorCustomizations": {
+    //     "comments": "#AAAAAA",
+    // }
 }

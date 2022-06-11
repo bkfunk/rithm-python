@@ -1,0 +1,35 @@
+x = 1
+y = 2
+z = x + y
+z2 = x, y -> +
+if {
+    "foo"
+}
+sumsq_x_y = x, y -> each(^2) -> +
+
+x_sq = x^2
+
+x_sqrt = sqrt(x)
+x_sqrt2 = x -> sqrt
+
+x_to_y = x, y -> ^
+x_to_y2 = x -> ^y
+
+
+-> # Don't mutate
+=> # Mutate
+
+`m`>
+
+// Comment
+/* Multiline comment 
+Hello
+
+/*
+There
+*/
+
+*/ There
+
+
+

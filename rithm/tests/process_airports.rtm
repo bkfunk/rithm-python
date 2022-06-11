@@ -1,0 +1,54 @@
+data_path = "../examples/data/airports.csv"
+
+airports = load(data_path)
+
+print(airports.nrows)
+print(airports.ncols)
+print(airports.colnames)
+if {
+    "foo"
+}
+Dict
+List (can be multiple types)
+Vec (can be only one type)
+Ser (single type)
+Mat
+Data
+Table
+DF
+Container
+
+String
+
+
+Date
+Time
+Datetime
+
+Bool
+Int
+Float
+Number
+Numeric
+
+foo#3@Latitude
+
+df@'Latitude'
+df@Latitude
+df@'Original Timestamp'
+df#3
+df#`1 to 3`
+df#`1 to 3`
+df#`1, 2, 3`
+df#[1, 2, 3]
+
+
+def foo(a is DF, b is Int =):
+def foo(DF: a)
+def foo(DF: a, Int: b=, Dict: c=empty(Dict)):
+    pass
+def foo(a DF)
+
+positional,
+required keyword
+optional keyword

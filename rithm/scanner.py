@@ -141,7 +141,7 @@ class Scanner:
                     self.add_token(TT.GREATER_THAN)
             case "<":
                 if self.match("="):
-                    char += self.advance_and_get_char
+                    char += self.advance_and_get_char()
                     self.add_token(TT.LESS_EQUAL)
                 elif self.match("-"):
                     char += self.advance_and_get_char()
@@ -169,6 +169,8 @@ class Scanner:
 
             # Literals
             case '"':
+                # Reset cursor so that we drop the opening quote
+                self.start = self.current
                 self.add_string()
             case d if re.match(r"\d", d):
                 self.add_number()
@@ -220,12 +222,11 @@ class Scanner:
             while self.peek() != '"':
                 self.advance()
             else:
+                self.add_token(TT.STRING, literal=self.current_lexeme)
                 # Advance to consume ending quote
                 self.advance()
         except IndexError:
             self.raise_exception(UnmatchedQuoteException("No closing quote found"))
-
-        self.add_token(TT.STRING, literal=self.current_lexeme)
 
     def add_number(self):
         is_decimal = False
@@ -263,6 +264,14 @@ class Scanner:
             pass
 
         match self.current_lexeme:
+            case "do":
+                self.add_token(TT.DO)
+            case "end":
+                self.add_token(TT.END)
+            case "if":
+                self.add_token(TT.IF)
+            case "else":
+                self.add_token(TT.ELSE)
             case "class":
                 self.add_token(TT.CLASS)
             case "and":

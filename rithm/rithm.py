@@ -2,7 +2,7 @@ from abc import ABCMeta
 import logging
 import sys
 from types import SimpleNamespace
-from typing import Any, Dict, List, TYPE_CHECKING
+from typing import Any, Dict, List, TYPE_CHECKING, Union
 from rithm.parser import Parser
 from rithm.interpreter import Interpreter
 from rithm.scanner import Scanner
@@ -56,13 +56,14 @@ class Rithm:
         file: str = None,
         debug: bool = False,
         result: bool = False,
-    ):
+    ) -> Union["RithmInstance", Any]:
         if input is None and file is None:
             return self.__instance
         elif input is not None:
             return self.__instance.run_input(input, debug=debug, result=result)
         elif file is not None:
             return self.__instance.run_file(file, debug=debug, result=result)
+        raise ValueError("Not sure what to do")
 
 
 class RithmInstance:

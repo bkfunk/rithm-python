@@ -19,28 +19,35 @@ algo clean_data(df) do
     -encode_embarked-> do
         /// Port passenger embarked at
         @embarked as @port_embarked
-        => to_factor
+        => .to_factor
         => .labels = {
-            "S" :> "Southampton"
-            "C" :> "Cherbourg"
+            "S" :> "Southampton",
+            "C" :> "Cherbourg",
             "Q" :> "Queenstown"
         }
     end
     -set_type-> @Fare
-        => as_type(Currency("$", decimals=?)) /// Price of fare, in USD
+        => .as_type(Currency("$", decimals=?)) /// Price of fare, in USD
     -process_name-> do
         @name
-        -> split(", ")
-        -> to_columns as @last_name, @first_name
+        -> .split(", ")
+        -> .to_columns as @last_name, @first_name
         @first_name
-        => split(". ")
-        => to_columns as @honorific, _
+        => .split(". ")
+        => .to_columns as @honorific, _
+        => .extract(`"""', `"""', ) as @nickname
+        => .extract("(", ")") as @parenthetical
+        => .strip
+        @parenthetical
+        -> 
     end
 end
 
 clean = clean_data(df)
 
 clean@honorific.desc()
+
+clean#1..3
 
 algo foo do
     hello

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, List
 from rithm.token import Token, TokenType as TT
 from abc import ABC
 
@@ -19,16 +19,33 @@ class Literal(Expr):
     value: Any
     token_type: TT
 
+    def __rich_repr__(self):
+        yield self.token_type._name_, self.value
+        # yield self.value
+
 
 @dataclass
 class Identifier(Expr):
     token: Token
+
+    def __rich_repr__(self):
+        yield self.token.token_type._name_, self.token.lexeme
 
 
 @dataclass
 class Assignment(Expr):
     name: Token
     value: Expr
+
+    def __rich_repr__(self):
+        yield "name", self.name
+        yield "value", self.value
+
+
+@dataclass
+class Call(Expr):
+    callee: Expr
+    args: List[Expr]
 
 
 @dataclass

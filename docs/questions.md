@@ -1,6 +1,8 @@
 # Open questions
 
 1. Should we have implicit variable declaration, like Python? Or use `let`? Or `var`? `const`?
+- `let` for local to block?
+- Or, should we make the block an object accessible by like `this`, and then everything is a class attribute? So, `block.foo = 3`, and anything else is global variable?
 
 2. Should blocks return the last value in the block?
 
@@ -26,3 +28,18 @@ Pros:
 
 Considerations:
 - Are arrows special? Or should spaces be used meaningfully throughout? As delimiters? Is there any reason not to require spaces around operators etc.?
+
+
+Thoughts:
+Classes with methods, but methods are the only things that can modify an object
+All objects are immutable by functions, but not methods.
+Functions are multiple dispatch, referred to by types
+
+sum[G, G] -> G
+sum[int, int] -> int
+sum[float, float] -> float
+sum[int, float] -> float
+sum(1, 1) # ==> sum[int, int]
+sum[float, float](1, 1) # ==> coerce 1 to float
+which(sum, 1, 1) ==> tells you which version of sum will get called
+methods(sum) ==> lists the different types

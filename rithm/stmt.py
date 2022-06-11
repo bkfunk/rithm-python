@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Optional
 from rithm.expr import Expr
 from rithm.visitor import Visitor
 
@@ -15,19 +15,19 @@ class Stmt:
 
 @dataclass
 class BlockStmt(Stmt):
-    statements: List[Stmt] = field(default_factory=list)
+    stmts: List[Stmt] = field(default_factory=list)
+
+
+@dataclass
+class IfStmt(Stmt):
+    condition: Expr
+    then_branch: Stmt
+    else_branch: Optional[Stmt]
 
 
 @dataclass
 class AlgoStmt(Stmt):
     pass
-
-
-@dataclass
-class IfStmt(Stmt):
-    test: Expr
-    if_true: Stmt
-    if_false: Stmt
 
 
 @dataclass
