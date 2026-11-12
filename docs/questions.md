@@ -43,3 +43,12 @@ sum(1, 1) # ==> sum[int, int]
 sum[float, float](1, 1) # ==> coerce 1 to float
 which(sum, 1, 1) ==> tells you which version of sum will get called
 methods(sum) ==> lists the different types
+
+
+x = if y < 10 then 3 else 5
+x = if y < 10 then do
+    res = 10 + y
+    res
+else
+    5
+end
