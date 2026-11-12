@@ -181,7 +181,17 @@ def test_parse_if():
         == std_str(
             """[
             IfStmt(
-                condition=Binary(),
+                condition=Binary(
+                    left=Identifier(IDENTIFIER='x'),
+                    operator=Token("<"),
+                    right=Float(1.2)
+                ),
+                then_branch=ExpressionStmt(
+                    expr=Literal(STRING='hello')
+                ),
+                else_branch=ExpressionStmt(
+                    expr=Literal(STRING='goodbye')
+                )
             )
     ]"""
         )
